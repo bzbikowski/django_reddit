@@ -6,11 +6,10 @@ from django.http import JsonResponse, HttpResponseBadRequest, Http404, \
     HttpResponseForbidden
 from django.shortcuts import render, redirect, get_object_or_404
 from django.template.defaulttags import register
-
 from reddit.forms import SubmissionForm
-from reddit.models import Submission, Comment, Vote
-from reddit.utils.helpers import post_only
+from reddit.models import Submission, Comment, Vote, Subreddit
 from users.models import RedditUser
+from reddit.serializers import CommentSerializer, SubmissionSerializer
 
 
 @register.filter
@@ -46,7 +45,7 @@ def frontpage(request):
 
     submission_votes = {}
 
-    if request.user.is_authenticated():
+    if request.user.is_authenticated:
         for submission in submissions:
             try:
                 vote = Vote.objects.get(
@@ -61,7 +60,7 @@ def frontpage(request):
                                                      'submission_votes': submission_votes})
 
 
-def comments(request, thread_id=None):
+def comments(request, thread_id=None, format=None):
     """
     Handles comment view when user opens the thread.
     On top of serving all comments in the thread it will
@@ -72,12 +71,11 @@ def comments(request, thread_id=None):
     :param thread_id: Thread ID as it's stored in database
     :type thread_id: int
     """
-
     this_submission = get_object_or_404(Submission, id=thread_id)
 
     thread_comments = Comment.objects.filter(submission=this_submission)
 
-    if request.user.is_authenticated():
+    if request.user.is_authenticated:
         try:
             reddit_user = RedditUser.objects.get(user=request.user)
         except RedditUser.DoesNotExist:
@@ -107,17 +105,21 @@ def comments(request, thread_id=None):
                 comment_votes[vote.vote_object.id] = vote.value
         except:
             pass
+    if format == 'json':
+        thread_comments = Comment.objects.filter(submission=this_submission, parent=None)
+        s_serializer = SubmissionSerializer(this_submission, many=False)
+        c_serializer = CommentSerializer(thread_comments, many=True)
+        return JsonResponse([s_serializer.data, c_serializer.data], safe=False)
+    else:
+        return render(request, 'public/comments.html',
+                      {'submission'   : this_submission,
+                       'comments'     : thread_comments,
+                       'comment_votes': comment_votes,
+                       'sub_vote'     : sub_vote_value})
 
-    return render(request, 'public/comments.html',
-                  {'submission'   : this_submission,
-                   'comments'     : thread_comments,
-                   'comment_votes': comment_votes,
-                   'sub_vote'     : sub_vote_value})
 
-
-@post_only
 def post_comment(request):
-    if not request.user.is_authenticated():
+    if not request.user.is_authenticated:
         return JsonResponse({'msg': "You need to log in to post new comments."})
 
     parent_type = request.POST.get('parentType', None)
@@ -150,7 +152,11 @@ def post_comment(request):
     return JsonResponse({'msg': "Your comment has been posted."})
 
 
-@post_only
+def subpage(request, _sub=None):
+    sub = get_object_or_404(Subreddit, http_link=_sub)
+    pass
+
+
 def vote(request):
     # The type of object we're voting on, can be 'submission' or 'comment'
     vote_object_type = request.POST.get('what', None)
@@ -166,7 +172,7 @@ def vote(request):
     # client side by the javascript instead of waiting for a refresh.
     vote_diff = 0
 
-    if not request.user.is_authenticated():
+    if not request.user.is_authenticated:
         return HttpResponseForbidden()
     else:
         user = RedditUser.objects.get(user=request.user)

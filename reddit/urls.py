@@ -13,15 +13,17 @@ Including another URLconf
     1. Add an import:  from blog import urls as blog_urls
     2. Add a URL to urlpatterns:  url(r'^blog/', include(blog_urls))
 """
-from django.conf.urls import url
-
+from django.urls import path
+from rest_framework.urlpatterns import format_suffix_patterns
 from . import views
 
 urlpatterns = [
-    url(r'^$', views.frontpage, name="frontpage"),
-    url(r'^comments/(?P<thread_id>[0-9]+)$', views.comments, name="thread"),
-    url(r'^submit/$', views.submit, name="submit"),
-    url(r'^post/comment/$', views.post_comment, name="post_comment"),
-    url(r'^vote/$', views.vote, name="vote"),
-
+    path('', views.frontpage, name='frontpage'),
+    path('r/<str:sub>/', views.subpage, name='subpage'),
+    path('comments/<int:thread_id>/', views.comments, name='thread'),
+    path('submit/', views.submit, name='submit'),
+    path('post/comment/', views.post_comment, name="post_comment"),
+    path('vote/', views.vote, name="vote"),
 ]
+
+urlpatterns = format_suffix_patterns(urlpatterns)

@@ -10,4 +10,5 @@ class RedditUserAdmin(admin.ModelAdmin):
         SubmissionInline,
     ]
 
+
 admin.site.register(RedditUser, RedditUserAdmin)

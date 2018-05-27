@@ -1,11 +1,11 @@
-from django.conf.urls import url
+from django.urls import path
 
 from . import views
 
 urlpatterns = [
-    url(r'^register/$', views.register, name="register"),
-    url(r'^login/$', views.user_login, name="login"),
-    url(r'^logout/$', views.user_logout, name="logout"),
-    url(r'^user/(?P<username>[0-9a-zA-Z_]*)$', views.user_profile, name="user_profile"),
-    url(r'^profile/edit/$', views.edit_profile, name="edit_profile"),
+    path('register/', views.register, name="register"),
+    path('login/', views.user_login, name="login"),
+    path('logout/', views.user_logout, name="logout"),
+    path('user/<str:username>', views.user_profile, name="user_profile"),
+    path('profile/edit/', views.edit_profile, name="edit_profile"),
 ]

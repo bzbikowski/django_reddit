@@ -6,7 +6,6 @@ from django.http import HttpResponseBadRequest, Http404
 from django.shortcuts import render, redirect, get_object_or_404
 
 from reddit.forms import UserForm, ProfileForm
-from reddit.utils.helpers import post_only
 from users.models import RedditUser
 
 
@@ -43,7 +42,7 @@ def user_login(request):
     supplied in the POST request.
     """
 
-    if request.user.is_authenticated():
+    if request.user.is_authenticated:
         messages.warning(request, "You are already logged in.")
         return render(request, 'public/login.html')
 
@@ -71,13 +70,12 @@ def user_login(request):
     return render(request, 'public/login.html')
 
 
-@post_only
 def user_logout(request):
     """
     Log out user if one is logged in and redirect them to frontpage.
     """
 
-    if request.user.is_authenticated():
+    if request.user.is_authenticated:
         redirect_page = request.POST.get('current_page', '/')
         logout(request)
         messages.success(request, 'Logged out!')
@@ -94,7 +92,7 @@ def register(request):
     If account has been created user is redirected to login page.
     """
     user_form = UserForm()
-    if request.user.is_authenticated():
+    if request.user.is_authenticated:
         messages.warning(request,
                         'You are already registered and logged in.')
         return render(request, 'public/register.html', {'form': user_form})
