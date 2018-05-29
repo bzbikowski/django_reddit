@@ -1,38 +1,23 @@
 {% extends 'base.html' %}
-{# {% load humanize %} #}
 
 {% block content %}
 
     <table>
         <tbody>
-        {% for submission in submissions %}
+        {% for subreddit in subreddits %}
             <tr>
-                <td>
-                    <div class="vote"
-                         data-what-type="submission"
-                         data-what-id="{{ submission.id }}">
-                        {% with vote_value=submission_votes|get_item:submission.id %}
-                            <div><i class="fa fa-chevron-up {% if  vote_value == 1 %} upvoted {% endif %}"
-                                    title="upvote" onclick="vote(this)"></i>
-                            </div>
-                            <div class="score" title="score">{{ submission.score }}</div>
-                            <div><i class="fa fa-chevron-down{% if  vote_value == -1 %} downvoted {% endif %}"
-                                    title="downvote"
-                                    onclick="vote(this)"></i></div>
-                        {% endwith %}
-                    </div>
-                </td>
                 <td class="info-container">
-                    <a class="thread-title" href="{{ submission.linked_url }}">{{ submission.title }}</a>
+                    <a class="thread-title" href="{{ subreddit.http_link }}">{{ subreddit.title }}</a>
                     <br>
-                    <h6 class="thread-info">submitted {{ submission.timestamp }} by <a
-                            href="/user/{{ submission.author_name }}">{{ submission.author_name }}</a></h6>
-
-                    <ul class="buttons">
-                        <li><a href="{{ submission.comments_url }}">{{ submission.comment_count }} comments</a></li>
-                    </ul>
-
-
+                    <p class="info-container">{{ subreddit.description }}</p>
+                    <br>
+                    <span>{{ subreddit.sub_count }} users</span>
+                </td>
+                <td>
+                  <form method="post" action="/r/{{ subreddit.name_id }}/subscribe/">
+                    {% csrf_token %}
+                    <button type="submit">Subscribe</button>
+                  </form>
                 </td>
             </tr>
         {% endfor %}
@@ -41,15 +26,15 @@
 
     <nav>
         <ul class="pager">
-            {% if submissions.has_previous %}
-                <li class="previous"><a href="?page={{ submissions.previous_page_number }}"><span
+            {% if subreddits.has_previous %}
+                <li class="previous"><a href="?page={{ subreddits.previous_page_number }}"><span
                         aria-hidden="true">&larr;</span> Previous</a></li>
             {% else %}
                 <li class="previous disabled"><a href="#"><span aria-hidden="true">&larr;</span> Previous</a></li>
             {% endif %}
 
-            {% if submissions.has_next %}
-                <li class="next"><a href="?page={{ submissions.next_page_number }}">Next <span
+            {% if subreddits.has_next %}
+                <li class="next"><a href="?page={{ subreddits.next_page_number }}">Next <span
                         aria-hidden="true">&rarr;</span></a></li>
             {% else %}
                 <li class="next disabled"><a href="#">Next <span aria-hidden="true">&rarr;</span></a></li>

@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% block content %}
-    <form class="form-horizontal" action="/submit/" method="post">
+    <form class="form-horizontal" action="/r/{{ sub }}/submit/" method="post">
         {% csrf_token %}
         <fieldset>
             <legend>New submission</legend>

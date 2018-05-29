@@ -10,6 +10,7 @@ from reddit.forms import SubmissionForm
 from reddit.models import Submission, Comment, Vote, Subreddit
 from users.models import RedditUser
 from reddit.serializers import CommentSerializer, SubmissionSerializer
+from django.views.decorators.http import require_http_methods
 
 
 @register.filter
@@ -26,14 +27,24 @@ def get_item(dictionary, key):  # pragma: no cover
 
 
 def frontpage(request):
-    """
-    Serves frontpage and all additional submission listings
-    with maximum of 25 submissions per page.
-    """
-    # TODO: Serve user votes on submissions too.
+    all_subreddits = Subreddit.objects.all()
+    paginator = Paginator(all_subreddits, 20)
 
-    all_submissions = Submission.objects.order_by('-score').all()
-    paginator = Paginator(all_submissions, 25)
+    page = request.GET.get('page', 1)
+    try:
+        subreddits = paginator.page(page)
+    except PageNotAnInteger:
+        raise Http404
+    except EmptyPage:
+        subreddits = paginator.page(paginator.num_pages)
+
+    return render(request, 'public/frontpage.html', {'subreddits': subreddits})
+
+
+def subreddit(request, sub=None, format=None):
+    this_subreddit = get_object_or_404(Subreddit, name_id=sub)
+    all_posts = Submission.objects.filter(subreddit=this_subreddit)
+    paginator = Paginator(all_posts, 20)
 
     page = request.GET.get('page', 1)
     try:
@@ -56,11 +67,11 @@ def frontpage(request):
             except Vote.DoesNotExist:
                 pass
 
-    return render(request, 'public/frontpage.html', {'submissions'     : submissions,
+    return render(request, 'public/subreddit.html', {'submissions': submissions,
                                                      'submission_votes': submission_votes})
 
 
-def comments(request, thread_id=None, format=None):
+def comments(request, sub=None, thread_id=None, format=None):
     """
     Handles comment view when user opens the thread.
     On top of serving all comments in the thread it will
@@ -71,7 +82,9 @@ def comments(request, thread_id=None, format=None):
     :param thread_id: Thread ID as it's stored in database
     :type thread_id: int
     """
-    this_submission = get_object_or_404(Submission, id=thread_id)
+    this_subreddit = get_object_or_404(Subreddit, name_id=sub)
+
+    this_submission = get_object_or_404(Submission, subreddit=this_subreddit, id=thread_id)
 
     thread_comments = Comment.objects.filter(submission=this_submission)
 
@@ -112,12 +125,13 @@ def comments(request, thread_id=None, format=None):
         return JsonResponse([s_serializer.data, c_serializer.data], safe=False)
     else:
         return render(request, 'public/comments.html',
-                      {'submission'   : this_submission,
-                       'comments'     : thread_comments,
+                      {'submission': this_submission,
+                       'comments': thread_comments,
                        'comment_votes': comment_votes,
-                       'sub_vote'     : sub_vote_value})
+                       'sub_vote': sub_vote_value})
 
 
+@require_http_methods(["POST"])
 def post_comment(request):
     if not request.user.is_authenticated:
         return JsonResponse({'msg': "You need to log in to post new comments."})
@@ -152,9 +166,15 @@ def post_comment(request):
     return JsonResponse({'msg': "Your comment has been posted."})
 
 
-def subpage(request, _sub=None):
-    sub = get_object_or_404(Subreddit, http_link=_sub)
-    pass
+@require_http_methods(["POST"])
+def post_subscribe(request, sub):
+    if not request.user.is_authenticated:
+        return JsonResponse({'msg': "You need to log in to post new comments."})
+    user = RedditUser.objects.get(user=request.user)
+    subreddit = Subreddit.objects.get(name_id=sub)
+
+    return JsonResponse({"msg": "You subscribe to that channel. "})
+
 
 
 def vote(request):
@@ -242,7 +262,7 @@ def vote(request):
 
 
 @login_required
-def submit(request):
+def submit(request, sub=None):
     """
     Handles new submission.. submission.
     """
@@ -257,8 +277,9 @@ def submit(request):
             redditUser = RedditUser.objects.get(user=user)
             submission.author = redditUser
             submission.author_name = user.username
+            submission.subreddit = Subreddit.objects.get(name_id=sub)
             submission.save()
             messages.success(request, 'Submission created')
-            return redirect('/comments/{}'.format(submission.id))
+            return redirect('/r/{}/{}'.format(sub, submission.id))
 
-    return render(request, 'public/submit.html', {'form': submission_form})
+    return render(request, 'public/submit.html', {'form': submission_form, 'sub': sub})

@@ -19,9 +19,10 @@ from . import views
 
 urlpatterns = [
     path('', views.frontpage, name='frontpage'),
-    path('r/<str:sub>/', views.subpage, name='subpage'),
-    path('comments/<int:thread_id>/', views.comments, name='thread'),
-    path('submit/', views.submit, name='submit'),
+    path('r/<str:sub>/', views.subreddit, name='sub'),
+    path('r/<str:sub>/<int:thread_id>/', views.comments, name='thread'),
+    path('r/<str:sub>/submit/', views.submit, name='submit'),
+    path('r/<str:sub>/subscribe/', views.post_subscribe, name='post_subscribe'),
     path('post/comment/', views.post_comment, name="post_comment"),
     path('vote/', views.vote, name="vote"),
 ]

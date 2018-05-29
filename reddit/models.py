@@ -2,17 +2,26 @@ import mistune
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
+from users.models import RedditUser
 from django.db import models
 from django.utils import timezone
 from mptt.models import MPTTModel, TreeForeignKey
 
 
 class Subreddit(models.Model):
-    moderators = None
-    admin = None
-    title = None
-    timestamp = None
-    http_link = None
+    admin = models.ForeignKey(RedditUser, on_delete=models.DO_NOTHING)
+    title = models.CharField(max_length=60)
+    description = models.TextField(max_length=1000)
+    timestamp = models.DateTimeField(default=timezone.now())
+    name_id = models.CharField(primary_key=True, max_length=30)
+    http_link = models.TextField()
+    sub_count = models.PositiveIntegerField()
+
+    def create(self):
+        self.http_link = f"/r/{self.name_id}"
+
+    def __str__(self):
+        return self.title
 
 
 class Submission(models.Model):
@@ -39,11 +48,11 @@ class Submission(models.Model):
         if self.url:
             return "{}".format(self.url)
         else:
-            return "/comments/{}".format(self.id)
+            return "/r/{}/{}".format(self.subreddit.name_id, self.id)
 
     @property
     def comments_url(self):
-        return '/comments/{}'.format(self.id)
+        return "/r/{}/{}".format(self.subreddit.name_id, self.id)
 
     def __str__(self):
         return "<Submission:{}>".format(self.id)

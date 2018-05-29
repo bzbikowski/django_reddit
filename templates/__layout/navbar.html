@@ -14,7 +14,6 @@
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-2">
             <ul class="nav navbar-nav">
                 <li><a href="{% url 'frontpage' %}">Home</a></li>
-                <li><a href="{% url 'submit' %}">Submit</a></li>
             </ul>
 
             <ul class="nav navbar-nav navbar-right ">
@@ -27,6 +26,7 @@
                             <li><a href="/user/{{ user }}">Profile</a></li>
                             <li class="disabled"><a href="#">Messages <span class="badge">0</span></a></li>
                             <li class="divider"></li>
+                            <li id="create-sub"><a href="#">Create a subreddit</a></li>
                             <li>
                                 <form id="logoutForm" action="/logout/" method="post">
                                     {% csrf_token %}

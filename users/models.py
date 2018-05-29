@@ -1,6 +1,7 @@
 from hashlib import md5
 
 import mistune
+from django.utils import timezone
 from django.contrib.auth.models import User
 from django.db import models
 
@@ -32,5 +33,10 @@ class RedditUser(models.Model):
         if self.display_picture:
             self.gravatar_hash = md5(self.email.lower().encode('utf-8')).hexdigest()
 
-    def __unicode__(self):
+    def check_creating_prev(self):
+        return (timezone.now() - self.user.date_joined) < 30
+
+    def __str__(self):
         return "<RedditUser:{}>".format(self.user.username)
+
+

@@ -173,4 +173,7 @@ $('a[name="replyButton"]').click(function () {
 });
 
 
+function check_user(user) {
+    $v
+}
 
