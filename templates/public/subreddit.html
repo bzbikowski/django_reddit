@@ -1,7 +1,8 @@
 {% extends 'base.html' %}
 
 {% block content %}
-
+  <div class="container">
+  <div class="col-sm-10">
     <table>
         <tbody>
         {% for submission in submissions %}
@@ -55,5 +56,11 @@
             {% endif %}
         </ul>
     </nav>
-
+  </div>
+    <div class="col-sm-2">
+      {% block menu %}
+      {% include '__layout/sub_navbar.html' %}
+      {% endblock %}
+    </div>
+</div>
 {% endblock %}

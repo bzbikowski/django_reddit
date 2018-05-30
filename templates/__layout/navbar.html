@@ -26,7 +26,7 @@
                             <li><a href="/user/{{ user }}">Profile</a></li>
                             <li class="disabled"><a href="#">Messages <span class="badge">0</span></a></li>
                             <li class="divider"></li>
-                            <li id="create-sub"><a href="#">Create a subreddit</a></li>
+                            <li id="create-sub"><a href="/r/create/">Create a subreddit</a></li>
                             <li>
                                 <form id="logoutForm" action="/logout/" method="post">
                                     {% csrf_token %}

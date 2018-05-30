@@ -18,7 +18,12 @@ class SubmissionAdmin(admin.ModelAdmin):
     inlines = [CommentsInline]
 
 
-admin.site.register(Subreddit)
+class SubredditAdmin(admin.ModelAdmin):
+    list_display = ('title', 'sub_count', 'http_link')
+    search_fields = ['title']
+
+
+admin.site.register(Subreddit, SubredditAdmin)
 admin.site.register(Submission, SubmissionAdmin)
 admin.site.register(Comment)
 admin.site.register(Vote)

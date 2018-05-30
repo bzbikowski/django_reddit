@@ -10,18 +10,19 @@ from mptt.models import MPTTModel, TreeForeignKey
 
 class Subreddit(models.Model):
     admin = models.ForeignKey(RedditUser, on_delete=models.DO_NOTHING)
+    admin_name = models.CharField(null=False, max_length=12)
     title = models.CharField(max_length=60)
     description = models.TextField(max_length=1000)
     timestamp = models.DateTimeField(default=timezone.now())
     name_id = models.CharField(primary_key=True, max_length=30)
     http_link = models.TextField()
-    sub_count = models.PositiveIntegerField()
+    sub_count = models.PositiveIntegerField(default=0)
 
-    def create(self):
+    def generate_link(self):
         self.http_link = f"/r/{self.name_id}"
 
     def __str__(self):
-        return self.title
+        return f"<Subreddit: {self.title}>"
 
 
 class Submission(models.Model):

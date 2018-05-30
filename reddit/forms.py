@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth.models import User
 from django.core.validators import RegexValidator
 
-from reddit.models import Submission
+from reddit.models import Submission, Subreddit
 from users.models import RedditUser
 
 
@@ -121,3 +121,28 @@ class SubmissionForm(forms.ModelForm):
     class Meta:
         model = Submission
         fields = ('title', 'url', 'text')
+
+
+class SubredditForm(forms.ModelForm):
+    title = forms.CharField(widget=forms.TextInput(attrs={
+        'class': "form-control",
+        'id': "first_name",
+        'type': "text"
+    }), max_length=60, required=True)
+
+    description = forms.CharField(widget=forms.Textarea(
+        attrs={
+            'class': "form-control",
+            'rows': "3",
+            'placeholder': "Optional text"}),
+        max_length=5000,
+        required=False)
+
+    name_id = forms.CharField(widget=forms.TextInput(attrs={
+        'class': "form-control",
+        'type': "text"
+    }), max_length=30, required=True)
+
+    class Meta:
+        model = Subreddit
+        fields = ('title', 'description', 'name_id')

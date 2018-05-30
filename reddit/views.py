@@ -6,11 +6,12 @@ from django.http import JsonResponse, HttpResponseBadRequest, Http404, \
     HttpResponseForbidden
 from django.shortcuts import render, redirect, get_object_or_404
 from django.template.defaulttags import register
-from reddit.forms import SubmissionForm
+from reddit.forms import SubmissionForm, SubredditForm
 from reddit.models import Submission, Comment, Vote, Subreddit
 from users.models import RedditUser
 from reddit.serializers import CommentSerializer, SubmissionSerializer
 from django.views.decorators.http import require_http_methods
+from django.utils import timezone
 
 
 @register.filter
@@ -67,7 +68,8 @@ def subreddit(request, sub=None, format=None):
             except Vote.DoesNotExist:
                 pass
 
-    return render(request, 'public/subreddit.html', {'submissions': submissions,
+    return render(request, 'public/subreddit.html', {'subreddit': this_subreddit,
+                                                     'submissions': submissions,
                                                      'submission_votes': submission_votes})
 
 
@@ -169,12 +171,11 @@ def post_comment(request):
 @require_http_methods(["POST"])
 def post_subscribe(request, sub):
     if not request.user.is_authenticated:
-        return JsonResponse({'msg': "You need to log in to post new comments."})
+        return JsonResponse({'msg': "You need to log in to subscribe new subreddits."})
     user = RedditUser.objects.get(user=request.user)
     subreddit = Subreddit.objects.get(name_id=sub)
 
     return JsonResponse({"msg": "You subscribe to that channel. "})
-
 
 
 def vote(request):
@@ -283,3 +284,28 @@ def submit(request, sub=None):
             return redirect('/r/{}/{}'.format(sub, submission.id))
 
     return render(request, 'public/submit.html', {'form': submission_form, 'sub': sub})
+
+
+@login_required
+def create_subreddit(request):
+    reddit_user = RedditUser.objects.get(user=request.user)
+    if reddit_user.check_creating_prev():
+        messages.info(request, 'You need to have at least 30 days old account to make a subreddit.')
+        return redirect(request.META['HTTP_REFERER'])
+
+    subreddit_form = SubredditForm()
+
+    if request.method == 'POST':
+        subreddit_form = SubredditForm(request.POST)
+        if subreddit_form.is_valid():
+            subreddit = subreddit_form.save(commit=False)
+            user = User.objects.get(username=request.user)
+            redditUser = RedditUser.objects.get(user=user)
+            subreddit.admin = redditUser
+            subreddit.admin_name = user.username
+            subreddit.generate_link()
+            subreddit.save()
+            messages.success(request, 'Subreddit created')
+            return redirect(subreddit.http_link)
+
+    return render(request, 'public/create_subreddit.html', {'form': subreddit_form})

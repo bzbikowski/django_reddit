@@ -74,6 +74,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'django_reddit.wsgi.application'
 
+LOGIN_URL = '/login'
 
 # Database
 # https://docs.djangoproject.com/en/2.0/ref/settings/#databases

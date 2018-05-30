@@ -34,7 +34,7 @@ class RedditUser(models.Model):
             self.gravatar_hash = md5(self.email.lower().encode('utf-8')).hexdigest()
 
     def check_creating_prev(self):
-        return (timezone.now() - self.user.date_joined) < 30
+        return (timezone.now() - self.user.date_joined).total_seconds() < 30*24*60*60
 
     def __str__(self):
         return "<RedditUser:{}>".format(self.user.username)
