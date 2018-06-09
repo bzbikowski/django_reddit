@@ -5,26 +5,12 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import JsonResponse, HttpResponseBadRequest, Http404, \
     HttpResponseForbidden
 from django.shortcuts import render, redirect, get_object_or_404
-from django.template.defaulttags import register
 from reddit.forms import SubmissionForm, SubredditForm
 from reddit.models import Submission, Comment, Vote, Subreddit
-from users.models import RedditUser
+from users.models import RedditUser, Subscriber
 from reddit.serializers import CommentSerializer, SubmissionSerializer
 from django.views.decorators.http import require_http_methods
 from django.utils import timezone
-
-
-@register.filter
-def get_item(dictionary, key):  # pragma: no cover
-    """
-    Needed because there's no built in .get in django templates
-    when working with dictionaries.
-
-    :param dictionary: python dictionary
-    :param key: valid dictionary key type
-    :return: value of that key or None
-    """
-    return dictionary.get(key)
 
 
 def frontpage(request):
@@ -38,7 +24,11 @@ def frontpage(request):
         raise Http404
     except EmptyPage:
         subreddits = paginator.page(paginator.num_pages)
-
+    if request.user.is_authenticated:
+        reddit_user = RedditUser.objects.get(user=request.user)
+        subscribed_subs = Subscriber.objects.filter(user=reddit_user)
+        list_of_subreddits = [sub.subscribed_to for sub in subscribed_subs]
+        return render(request, 'public/frontpage.html', {'subreddits': subreddits, 'subscribed_to': list_of_subreddits})
     return render(request, 'public/frontpage.html', {'subreddits': subreddits})
 
 
@@ -171,11 +161,28 @@ def post_comment(request):
 @require_http_methods(["POST"])
 def post_subscribe(request, sub):
     if not request.user.is_authenticated:
-        return JsonResponse({'msg': "You need to log in to subscribe new subreddits."})
+        messages.error(request, "You need to log in to subscribe new subreddits.")
+        return redirect(request.META['HTTP_REFERER'])
     user = RedditUser.objects.get(user=request.user)
     subreddit = Subreddit.objects.get(name_id=sub)
+    subscriber = Subscriber(user=user, subscribed_to=subreddit)
+    subscriber.save()
+    subreddit.subscribe()
+    subreddit.save()
+    messages.success(request, "Successful subscription.")
+    return redirect(request.META['HTTP_REFERER'])
 
-    return JsonResponse({"msg": "You subscribe to that channel. "})
+
+@require_http_methods(["POST"])
+def post_unsubscribe(request, sub):
+    user = RedditUser.objects.get(user=request.user)
+    subreddit = Subreddit.objects.get(name_id=sub)
+    subscriber = Subscriber.objects.get(user=user, subscribed_to=subreddit)
+    subscriber.delete()
+    subreddit.unsubscribe()
+    subreddit.save()
+    messages.success(request, "Successful unsubscription.")
+    return redirect(request.META['HTTP_REFERER'])
 
 
 def vote(request):

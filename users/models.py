@@ -40,3 +40,10 @@ class RedditUser(models.Model):
         return "<RedditUser:{}>".format(self.user.username)
 
 
+class Subscriber(models.Model):
+    user = models.ForeignKey(RedditUser, on_delete=models.CASCADE)
+    subscribed_to = models.ForeignKey('reddit.Subreddit', on_delete=models.CASCADE)
+    timestamp = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return f"<Subscriber:{self.user.user.username}->{self.subscribed_to.title}"

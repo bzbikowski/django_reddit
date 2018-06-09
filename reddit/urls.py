@@ -24,6 +24,7 @@ urlpatterns = [
     path('r/<str:sub>/<int:thread_id>/', views.comments, name='thread'),
     path('r/<str:sub>/submit/', views.submit, name='submit'),
     path('r/<str:sub>/subscribe/', views.post_subscribe, name='post_subscribe'),
+    path('r/<str:sub>/unsubscribe/', views.post_unsubscribe, name='post_unsubscribe'),
     path('post/comment/', views.post_comment, name="post_comment"),
     path('vote/', views.vote, name="vote"),
 ]

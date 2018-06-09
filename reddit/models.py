@@ -13,7 +13,7 @@ class Subreddit(models.Model):
     admin_name = models.CharField(null=False, max_length=12)
     title = models.CharField(max_length=60)
     description = models.TextField(max_length=1000)
-    timestamp = models.DateTimeField(default=timezone.now())
+    timestamp = models.DateTimeField(default=timezone.now)
     name_id = models.CharField(primary_key=True, max_length=30)
     http_link = models.TextField()
     sub_count = models.PositiveIntegerField(default=0)
@@ -23,6 +23,12 @@ class Subreddit(models.Model):
 
     def __str__(self):
         return f"<Subreddit: {self.title}>"
+
+    def subscribe(self):
+        self.sub_count += 1
+
+    def unsubscribe(self):
+        self.sub_count -= 1
 
 
 class Submission(models.Model):

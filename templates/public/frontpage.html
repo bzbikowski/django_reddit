@@ -14,10 +14,19 @@
                     <span>{{ subreddit.sub_count }} users</span>
                 </td>
                 <td>
-                  <form method="post" action="/r/{{ subreddit.name_id }}/subscribe/">
-                    {% csrf_token %}
-                    <button type="submit">Subscribe</button>
-                  </form>
+                  {% if subscribed_to %}
+                      {% if subreddit in subscribed_to %}
+                        <form method="post" action="/r/{{ subreddit.name_id }}/unsubscribe/">
+                          {% csrf_token %}
+                          <button type="submit">Unsubscribe</button>
+                        </form>
+                    {% endif %}
+                    {% else %}
+                     <form method="post" action="/r/{{ subreddit.name_id }}/subscribe/">
+                          {% csrf_token %}
+                          <button type="submit">Subscribe</button>
+                     </form>
+                  {% endif %}
                 </td>
             </tr>
         {% endfor %}
